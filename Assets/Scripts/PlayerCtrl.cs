@@ -21,6 +21,9 @@ using System.Collections;
 
 public class PlayerCtrl : MonoBehaviour {
 
+    public Transform weaponAttachPoint = null;
+    public Transform weapon = null;
+
     Animator animator;
 
     // ------------------------------------------------------------------ 
@@ -29,6 +32,7 @@ public class PlayerCtrl : MonoBehaviour {
 
     void Awake () {
         animator = GetComponentInChildren<Animator>();
+        weapon.parent = weaponAttachPoint;
     }
 
     // ------------------------------------------------------------------ 
@@ -46,9 +50,34 @@ public class PlayerCtrl : MonoBehaviour {
         HandleInput();
 
         if ( animator ) {
-            if ( Input.GetKey(KeyCode.Space) ) {
+            if ( animator.IsInTransition(0) ) {
+                AnimatorTransitionInfo currentTransition = animator.GetAnimatorTransitionInfo(0);        
+                float currentExitTime = currentTransition.normalizedTime;
+                if ( currentTransition.IsUserName("FinishAttack") ) {
+                    animator.SetInteger("attackID", 0);
+                    animator.SetInteger("magicID", 0);
+                }
+            }
+
+            // DEBUG { 
+            if ( Input.GetKeyDown(KeyCode.Space) ) {
                 animator.SetBool("dead", true);
             }
+            if ( Input.GetKeyDown(KeyCode.R) ) {
+                animator.SetBool("running", true);
+            }
+            if ( Input.GetKeyDown(KeyCode.W) ) {
+                animator.SetBool("running", false);
+            }
+            if ( Input.GetKeyDown(KeyCode.Return) ) {
+                int val = animator.GetInteger("attackID");
+                animator.SetInteger("attackID", val+1);
+            }
+            if ( Input.GetKeyDown(KeyCode.M) ) {
+                int val = animator.GetInteger("magicID");
+                animator.SetInteger("magicID", val+1);
+            }
+            // } DEBUG end 
         }
 	}
 
