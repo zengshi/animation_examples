@@ -21,8 +21,18 @@ using System.Collections;
 
 public class PlayerCtrl : MonoBehaviour {
 
+    public enum ClassType {
+        Worrior,
+        Magic,
+    }
+
     public Transform weaponAttachPoint = null;
     public Transform weapon = null;
+
+    public AnimationClip magic;
+    public AnimationClip attack;
+    public ClassType classType;
+
 
     Animator animator;
 
@@ -33,6 +43,20 @@ public class PlayerCtrl : MonoBehaviour {
     void Awake () {
         animator = GetComponentInChildren<Animator>();
         weapon.parent = weaponAttachPoint;
+
+        //
+        if ( classType == ClassType.Magic ) {
+            AnimatorOverrideController overrideController = new AnimatorOverrideController();
+            overrideController.runtimeAnimatorController = animator.runtimeAnimatorController;
+            overrideController["magic"] = magic;
+            animator.runtimeAnimatorController = overrideController;
+        }
+        else if ( classType == ClassType.Worrior ) {
+            AnimatorOverrideController overrideController = new AnimatorOverrideController();
+            overrideController.runtimeAnimatorController = animator.runtimeAnimatorController;
+            overrideController["magic"] = attack;
+            animator.runtimeAnimatorController = overrideController;
+        }
     }
 
     // ------------------------------------------------------------------ 
@@ -54,8 +78,8 @@ public class PlayerCtrl : MonoBehaviour {
                 AnimatorTransitionInfo currentTransition = animator.GetAnimatorTransitionInfo(0);        
                 float currentExitTime = currentTransition.normalizedTime;
                 if ( currentTransition.IsUserName("FinishAttack") ) {
-                    animator.SetInteger("attackID", 0);
-                    animator.SetInteger("magicID", 0);
+                    animator.SetInteger("skillID", -1);
+                    animator.SetBool("castSkill", false);
                 }
             }
 
@@ -63,19 +87,42 @@ public class PlayerCtrl : MonoBehaviour {
             if ( Input.GetKeyDown(KeyCode.Space) ) {
                 animator.SetBool("dead", true);
             }
+
+            //
             if ( Input.GetKeyDown(KeyCode.R) ) {
                 animator.SetBool("running", true);
             }
+
+            //
             if ( Input.GetKeyDown(KeyCode.W) ) {
                 animator.SetBool("running", false);
             }
+
+            //
             if ( Input.GetKeyDown(KeyCode.Return) ) {
-                int val = animator.GetInteger("attackID");
-                animator.SetInteger("attackID", val+1);
+                AnimatorStateInfo stateInfo;
+                if ( animator.IsInTransition(0) ) {
+                    stateInfo = animator.GetNextAnimatorStateInfo(0);        
+                }
+                else {
+                    stateInfo = animator.GetCurrentAnimatorStateInfo(0);        
+                }
+
+                if ( stateInfo.IsName("combo1") ) {
+                    animator.SetInteger("skillID", 2);
+                }
+                else if ( stateInfo.IsName("combo2") ) {
+                    animator.SetInteger("skillID", 3);
+                }
+                else {
+                    animator.SetInteger("skillID", 1);
+                }
+                animator.SetBool("castSkill", true);
             }
+
             if ( Input.GetKeyDown(KeyCode.M) ) {
-                int val = animator.GetInteger("magicID");
-                animator.SetInteger("magicID", val+1);
+                animator.SetInteger("skillID", 5);
+                animator.SetBool("castSkill", true);
             }
             // } DEBUG end 
         }
